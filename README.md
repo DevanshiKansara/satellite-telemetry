@@ -87,6 +87,10 @@ The unit runs as the unprivileged user `satellite`, restarts on failure and uses
 | Injected loss | Packets sent | Received | Loss detected by ground |
 |---|---|---|---|
 | 20 % (+100 ms delay) | 150 | 120 | 30 |
+| 20 % (+100 ms delay) | 150 | 113 | 37 |
+| 5 % (+100 ms delay) | 150 | 145 | 5 |
+
+In every run, the loss detected by the ground equals packets sent minus packets received. The measured rate differs from the nominal one because netem drops packets randomly.
 
 Other fault tests: killing the service with SIGKILL (systemd restarts it within about 2 s) and flipping every single byte of a packet (always rejected by the decoder).
 
