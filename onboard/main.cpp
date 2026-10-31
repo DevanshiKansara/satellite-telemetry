@@ -31,6 +31,8 @@ int main(int argc, char** argv) {
             if (phase >= 40) batt -= (phase - 40) * 60;
             int temp = 2150 + phase * 5;
             if (phase >= 25) temp += (phase - 25) * 150;
+            if (temp > 8500) temp = 8500;
+            if (batt < 5000) batt = 5000;
 
             tlm::Telemetry t{};
             t.battery_mv = static_cast<uint16_t>(batt < 0 ? 0 : batt);
