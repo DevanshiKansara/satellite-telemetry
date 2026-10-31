@@ -86,7 +86,6 @@ The unit runs as the unprivileged user `satellite`, restarts on failure and uses
 
 | Injected loss | Packets sent | Received | Loss detected by ground |
 |---|---|---|---|
-| 20 % (+100 ms delay) | 150 | 120 | 30 |
 | 20 % (+100 ms delay) | 150 | 113 | 37 |
 | 5 % (+100 ms delay) | 150 | 145 | 5 |
 
