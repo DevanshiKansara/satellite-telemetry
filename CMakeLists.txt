@@ -4,5 +4,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_executable(onboard onboard/main.cpp onboard/packet.cpp)
+add_executable(onboard
+    onboard/main.cpp
+    onboard/packet.cpp
+    onboard/anomaly.cpp
+    onboard/udp.cpp)
 target_include_directories(onboard PRIVATE onboard)
