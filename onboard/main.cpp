@@ -10,7 +10,7 @@
 #include "packet.hpp"
 #include "udp.hpp"
 
-// usage: onboard [host] [port] [count] [interval_ms]
+// usage: onboard [host] [port] [count (0 = run forever)] [interval_ms]
 int main(int argc, char** argv) {
     const std::string host = argc > 1 ? argv[1] : "127.0.0.1";
     const uint16_t port =
@@ -21,14 +21,16 @@ int main(int argc, char** argv) {
     try {
         net::UdpSender link(host, port);
         tlm::AnomalyDetector detector;
-        std::cerr << "[onboard] sending " << count << " packets to " << host
-                  << ":" << port << std::endl;
+        std::cerr << "[onboard] sending to " << host << ":" << port
+                  << " (count=" << count << ", interval=" << interval_ms
+                  << " ms)" << std::endl;
 
-        for (int i = 0; i < count; ++i) {
-            int batt = 7400 - i * 5;
-            if (i >= 40) batt -= (i - 40) * 60;
-            int temp = 2150 + i * 5;
-            if (i >= 25) temp += (i - 25) * 150;
+        for (long i = 0; count <= 0 || i < count; ++i) {
+            const int phase = static_cast<int>(i % 100);  // scenario repeats
+            int batt = 7400 - phase * 5;
+            if (phase >= 40) batt -= (phase - 40) * 60;
+            int temp = 2150 + phase * 5;
+            if (phase >= 25) temp += (phase - 25) * 150;
 
             tlm::Telemetry t{};
             t.battery_mv = static_cast<uint16_t>(batt < 0 ? 0 : batt);
@@ -37,13 +39,13 @@ int main(int argc, char** argv) {
             t.status_flags = detector.evaluate(t);
 
             if (t.status_flags != 0) {
-                std::fprintf(stderr, "[onboard] seq=%d anomaly flags=0x%02X\n",
+                std::fprintf(stderr, "[onboard] seq=%ld anomaly flags=0x%02X\n",
                              i, t.status_flags);
             }
 
-            auto pkt = tlm::encode_packet(static_cast<uint16_t>(i),
-                                          static_cast<uint32_t>(i) * interval_ms,
-                                          t);
+            auto pkt = tlm::encode_packet(
+                static_cast<uint16_t>(i & 0xFFFF),
+                static_cast<uint32_t>(i * interval_ms), t);
             if (!link.send(pkt)) std::cerr << "[onboard] send failed\n";
             std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms));
         }
