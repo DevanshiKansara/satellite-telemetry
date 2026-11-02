@@ -119,3 +119,18 @@ scripts/   build/test, deployment and fault-injection scripts
 deploy/    systemd unit file
 docs/      operating procedures
 ```
+
+## CI/CD and DevOps
+
+The project is built and tested the same way everywhere: locally, in GitHub Actions and in Jenkins.
+
+- **Docker:** `Dockerfile` defines the build and test environment (Ubuntu 24.04, CMake, Ninja, GoogleTest, pytest, cppcheck).
+  Run all tests with `docker build -t satellite-telemetry-ci . && docker run --rm satellite-telemetry-ci`.
+- **GitHub Actions** (`.github/workflows/ci.yml`): two stages on every push and pull request:
+  1. static analysis with cppcheck
+  2. build and test in Docker, with the `onboard` binary and the pytest XML report uploaded as artifacts
+- **Jenkins** (`Jenkinsfile`, `jenkins/Dockerfile`): the same three stages (image build, cppcheck, build and test)
+  run on a local Jenkins server in Docker. Test results are published and artifacts are archived.
+
+![GitHub Actions pipeline](docs/github-actions.png)
+![Jenkins pipeline](docs/jenkins-pipeline.png)
