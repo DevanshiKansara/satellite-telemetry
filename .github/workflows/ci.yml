@@ -4,15 +4,39 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
 
 jobs:
-  build-and-test:
+  static-analysis:
+    name: 1. Static analysis (cppcheck)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
+      - name: Build Docker image
+        run: docker build -t satellite-telemetry-ci .
+      - name: Run cppcheck
+        run: >
+          docker run --rm satellite-telemetry-ci
+          cppcheck --enable=warning,performance,portability
+          --error-exitcode=1 -I onboard onboard/
+
+  build-and-test:
+    name: 2. Build and test (Docker)
+    needs: static-analysis
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t satellite-telemetry-ci .
+      - name: Build, test and collect results
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build g++ libgtest-dev python3-pytest
-      - name: Build and run all tests
-        run: ./scripts/run_tests.sh
+          mkdir -p artifacts
+          docker run --rm -v "$PWD/artifacts:/artifacts" satellite-telemetry-ci bash -c \
+            "./scripts/run_tests.sh && python3 -m pytest tests -q --junitxml=/artifacts/pytest-results.xml && cp build/onboard /artifacts/onboard"
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: telemetry-build
+          path: artifacts/
+          if-no-files-found: warn

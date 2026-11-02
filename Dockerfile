@@ -10,4 +10,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /work
 COPY . .
 
-CMD ["bash", "-c", "cmake -S . -B build -G Ninja && cmake --build build && ./scripts/run_tests.sh"]
+CMD ["./scripts/run_tests.sh"]
